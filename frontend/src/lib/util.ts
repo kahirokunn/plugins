@@ -173,6 +173,16 @@ export function getResourceMetrics(
 }
 
 /**
+ * Returns an array that contains only unique values from the given list, preserving the original order.
+ *
+ * @param items - The list of items to deduplicate.
+ * @returns The list with duplicates removed.
+ */
+export function unique<T>(items: T[]): T[] {
+  return Array.from(new Set(items));
+}
+
+/**
  * Get a function to filter kube resources based on the current global filter state.
  *
  * @returns A filter function that can be used to filter a list of items.

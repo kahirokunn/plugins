@@ -29,6 +29,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { loadClusterSettings } from '../../helpers/clusterSettings';
 import { useCluster, useClustersConf } from '../../lib/k8s';
 import Namespace from '../../lib/k8s/namespace';
+import { unique } from '../../lib/util';
 import { setNamespaceFilter } from '../../redux/filterSlice';
 import { useTypedSelector } from '../../redux/hooks';
 
@@ -266,10 +267,10 @@ function NamespacesFromClusterAutocomplete(
   const [namespacesList, error] = Namespace.useList();
   const namespaceNames = useMemo(
     () =>
-      namespacesList
-        ?.map(namespace => namespace.metadata.name)
-        .slice()
-        .sort((a, b) => a.localeCompare(b)) ?? [],
+        unique(namespacesList ?? [])
+          .map(namespace => namespace.metadata.name)
+          .slice()
+          .sort((a, b) => a.localeCompare(b)),
     [namespacesList]
   );
 
