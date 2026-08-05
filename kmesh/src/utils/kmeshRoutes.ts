@@ -7,6 +7,8 @@ export const kmeshRouteNames = {
   /** xDS Config Dump viewer (kernel-native / ADS mode) */
   xdsConfigDump: 'kmesh-xds-config-dump',
   healthDashboard: 'kmesh-health-dashboard',
+  observability: 'kmesh-observability',
+  authzPolicies: 'kmesh-authz-policies',
 } as const;
 
 /**
@@ -19,4 +21,6 @@ export const kmeshRoutePaths = {
    *  the kernel-native (ADS) daemon config dump endpoint. */
   xdsConfigDump: '/kmesh/xds-config',
   healthDashboard: '/kmesh/health',
+  observability: '/kmesh/observability',
+  authzPolicies: '/kmesh/authz-policies',
 } as const;

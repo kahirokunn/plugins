@@ -12,4 +12,14 @@ describe('Kmesh Routes', () => {
     expect(kmeshRoutePaths.xdsConfigDump).toBe('/kmesh/xds-config');
     expect(kmeshRouteNames.xdsConfigDump).toBe('kmesh-xds-config-dump');
   });
+
+  it('should define the observability route correctly', () => {
+    expect(kmeshRoutePaths.observability).toBe('/kmesh/observability');
+    expect(kmeshRouteNames.observability).toBe('kmesh-observability');
+  });
+
+  it('should define the authz policies route correctly', () => {
+    expect(kmeshRoutePaths.authzPolicies).toBe('/kmesh/authz-policies');
+    expect(kmeshRouteNames.authzPolicies).toBe('kmesh-authz-policies');
+  });
 });
