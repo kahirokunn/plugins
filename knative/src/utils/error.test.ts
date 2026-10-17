@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { errorDetail, getErrorMessage, isNotFoundError, withDetail } from './error';
+import { errorDetail, getErrorMessage, isNotFoundError, wasRefused, withDetail } from './error';
 
 describe('getErrorMessage', () => {
   it('returns the message from Error and API-like objects', () => {
@@ -55,5 +55,20 @@ describe('withDetail', () => {
 
   it('returns the message alone when there is no detail', () => {
     expect(withDetail('Restart failed', undefined)).toBe('Restart failed');
+  });
+});
+
+describe('wasRefused', () => {
+  it('is true for 4xx statuses other than 408', () => {
+    expect(wasRefused({ status: 400 })).toBe(true);
+    expect(wasRefused({ status: 403 })).toBe(true);
+    expect(wasRefused({ status: 409 })).toBe(true);
+  });
+
+  it('is false when the request may have been applied', () => {
+    expect(wasRefused({ status: 408 })).toBe(false);
+    expect(wasRefused({ status: 500 })).toBe(false);
+    expect(wasRefused(new Error('Network error'))).toBe(false);
+    expect(wasRefused(undefined)).toBe(false);
   });
 });

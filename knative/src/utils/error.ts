@@ -49,3 +49,15 @@ export function errorDetail(error: unknown): string | undefined {
 export function withDetail(message: string, detail: string | undefined): string {
   return detail ? `${message}: ${detail}` : message;
 }
+
+/**
+ * Tells whether the API server refused a request, so that the request changed nothing. Timeouts,
+ * network failures and server errors leave that open.
+ *
+ * @param error - The error the request failed with.
+ * @returns True for a 4xx status other than 408 Request Timeout.
+ */
+export function wasRefused(error: unknown): boolean {
+  const status = (error as { status?: unknown } | undefined)?.status;
+  return typeof status === 'number' && status >= 400 && status < 500 && status !== 408;
+}

@@ -33,6 +33,7 @@ import { KServiceLogsHeaderButton } from './detail/header/KServiceLogsHeaderButt
 import { KServiceViewYamlHeaderButton } from './detail/header/KServiceViewYamlHeaderButton';
 import { KServiceEditContextProvider } from './detail/hooks/useKServiceEditMode';
 import { KServicePermissionsProvider } from './detail/permissions/KServicePermissionsProvider';
+import { KServiceRestartProvider } from './detail/restart/KServiceRestartProvider';
 import { AutoscalingSection } from './detail/sections/autoscaling/AutoscalingSection';
 import { IngressClassValue } from './detail/sections/networking/NetworkingSection';
 import { NetworkingSection } from './detail/sections/networking/NetworkingSection';
@@ -40,7 +41,7 @@ import { OverviewSection } from './detail/sections/overview/OverviewSection';
 import { PodsSection } from './detail/sections/pods/PodsSection';
 import { TrafficSection } from './detail/sections/traffic/TrafficSection';
 
-export function KServiceDetail() {
+function KServiceDetailContents() {
   const { name, namespace } = useParams<{ namespace: string; name: string }>();
   const clusters = useClusters();
   const { isKnativeInstalled, isKnativeCheckLoading } = useKnativeInstalled('serving', clusters);
@@ -263,5 +264,19 @@ export function KServiceDetail() {
         <NotInstalledBanner isLoading={isKnativeCheckLoading} />
       )}
     </KServiceEditContextProvider>
+  );
+}
+
+/**
+ * Shows a Knative Service. A restart started here keeps going, and shows its result, until the page
+ * is left.
+ *
+ * @returns The detail page of the Knative Service named in the URL.
+ */
+export function KServiceDetail() {
+  return (
+    <KServiceRestartProvider>
+      <KServiceDetailContents />
+    </KServiceRestartProvider>
   );
 }

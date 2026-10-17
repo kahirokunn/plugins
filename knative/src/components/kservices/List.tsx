@@ -39,6 +39,7 @@ import { NotInstalledBanner } from '../common/NotInstalledBanner';
 import { ExternalUrl, ReadyCell } from '../common/ResourceListCells';
 import { useCanRestartKService } from './detail/hooks/useCanRestartKService';
 import { useKServiceActions } from './detail/hooks/useKServiceActions';
+import { KServiceRestartProvider } from './detail/restart/KServiceRestartProvider';
 
 type IngressClassWithCluster = {
   cluster: string;
@@ -578,7 +579,9 @@ export function KServicesList() {
   const { isKnativeInstalled, isKnativeCheckLoading } = useKnativeInstalled('serving', clusters);
 
   return isKnativeInstalled ? (
-    <KServicesListContents clusters={clusters} />
+    <KServiceRestartProvider>
+      <KServicesListContents clusters={clusters} />
+    </KServiceRestartProvider>
   ) : (
     <NotInstalledBanner isLoading={isKnativeCheckLoading} />
   );
