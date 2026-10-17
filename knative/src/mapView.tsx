@@ -22,7 +22,9 @@ import type {
   GraphNode,
   GraphSource,
 } from '@kinvolk/headlamp-plugin/lib/components/resourceMap/graph/graphModel';
+import type { KubeObject, KubeObjectClass } from '@kinvolk/headlamp-plugin/lib/k8s/KubeObject';
 import { Box } from '@mui/system';
+import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { knativeMapSourceConfig } from './mapSourceConfig';
 import {
@@ -61,6 +63,7 @@ import {
   KService,
   type Traffic,
 } from './resources/knative';
+import type { KnativeResourceClass } from './resources/knative/customResourceLinks';
 import { formatList, formatNanoseconds, formatTraffic } from './utils/servingResources';
 import { getSafeUrl } from './utils/url';
 
@@ -72,28 +75,24 @@ type MapNode = GraphNode & {
   traffic?: Traffic[];
 };
 
-type ResourceClass = {
-  apiName: string;
-  apiVersion: string | string[];
-  kind: string;
-};
+type DetailRow = { name: string; value: ReactNode };
 
-function readyValue(item: any): string {
+function readyValue(item: TopologyResource): string {
   return getReadyCondition(item)?.status ?? 'Unknown';
 }
 
-function resourceCoordinates(node: any) {
+function resourceCoordinates(node: GraphNode) {
   return {
     name: node.kubeObject.jsonData.metadata.name,
     namespace: node.kubeObject.jsonData.metadata.namespace,
   };
 }
 
-function makeDetailsComponent(
-  resourceType: any,
-  rows: (item: any, node: MapNode) => Array<{ name: string; value: any }>
+function makeDetailsComponent<T extends KubeObjectClass>(
+  resourceType: T,
+  rows: (item: InstanceType<T>, node: MapNode) => DetailRow[]
 ) {
-  return ({ node }: { node: any }) => (
+  return ({ node }: { node: MapNode }) => (
     <DetailsGrid
       resourceType={resourceType}
       {...resourceCoordinates(node)}
@@ -190,15 +189,15 @@ const CertificateDetails = makeDetailsComponent(KnativeCertificate, item => [
 ]);
 
 function makeNode(
-  resource: any,
-  resourceClass: ResourceClass,
+  resource: KubeObject,
+  resourceClass: KnativeResourceClass,
   detailsComponent: MapNode['detailsComponent'],
   data: Partial<MapNode> = {}
 ): MapNode {
   return {
     id: resource.metadata.uid,
     kubeObject: resource,
-    customResourceDefinition: getKnativeCrdName(resourceClass as any),
+    customResourceDefinition: getKnativeCrdName(resourceClass),
     detailsComponent,
     weight: 1100,
     status: getReadyNodeStatus(resource as TopologyResource),
@@ -526,7 +525,7 @@ export const knativePluginSource: GraphSource = {
 
 type GlanceFact = { label: string; value: unknown };
 
-const glanceFactsByClass: Array<[ResourceClass, (resource: any) => GlanceFact[]]> = [
+const glanceFactsByClass: Array<[KnativeResourceClass, (resource: any) => GlanceFact[]]> = [
   [
     KnativeConfiguration,
     resource => [
@@ -588,14 +587,14 @@ const glanceFactsByClass: Array<[ResourceClass, (resource: any) => GlanceFact[]]
   ],
 ];
 
-function internalGlanceFacts(resource: any): GlanceFact[] | null {
+function internalGlanceFacts(resource: KubeObject): GlanceFact[] | null {
   const entry = glanceFactsByClass.find(([resourceClass]) =>
     matchesResourceClass(resource, resourceClass)
   );
   return entry ? entry[1](resource) : null;
 }
 
-export function KnativeInternalResourceGlance({ node }: { node: any }) {
+export function KnativeInternalResourceGlance({ node }: { node: GraphNode }) {
   const resource = node.kubeObject;
   const facts = internalGlanceFacts(resource);
   if (!facts) return null;

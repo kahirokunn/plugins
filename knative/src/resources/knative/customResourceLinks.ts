@@ -16,7 +16,7 @@
 
 import { Router } from '@kinvolk/headlamp-plugin/lib';
 
-type KnativeResourceClass = {
+export type KnativeResourceClass = {
   kind: string;
   apiName: string;
   apiVersion: string | string[];

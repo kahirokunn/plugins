@@ -20,7 +20,6 @@ import {
   ResourceListView,
   type ResourceTableColumn,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
-import type { KubeObject } from '@kinvolk/headlamp-plugin/lib/k8s/cluster';
 import { Chip, Typography } from '@mui/material';
 import React, { useMemo } from 'react';
 import { useClusters } from '../../hooks/useClusters';
@@ -32,19 +31,23 @@ export function useClusterDomainClaimColumns(
 ) {
   const showClusterColumn = clusters.length > 1;
 
-  return useMemo<(ResourceTableColumn<KubeObject> | 'age' | 'name')[]>(() => {
-    const cols: (ResourceTableColumn<KubeObject> | 'age' | 'name')[] = [
+  return useMemo<(ResourceTableColumn<ClusterDomainClaim> | 'age' | 'name')[]>(() => {
+    const clusterColumn: ResourceTableColumn<ClusterDomainClaim> = {
+      id: 'cluster',
+      label: 'Cluster',
+      gridTemplate: 'auto',
+      getValue: item => item.cluster ?? '',
+    };
+    const cols: (ResourceTableColumn<ClusterDomainClaim> | 'age' | 'name')[] = [
       'name',
       {
         id: 'namespace',
         label: 'Namespace',
         gridTemplate: 'auto',
-        getValue: item => {
-          const cdc = item as ClusterDomainClaim;
+        getValue: cdc => {
           return cdc.spec?.namespace || '';
         },
-        render: item => {
-          const cdc = item as ClusterDomainClaim;
+        render: cdc => {
           const ns = cdc.spec?.namespace;
           const cluster = cdc.cluster || clusters[0] || '';
 
@@ -63,23 +66,13 @@ export function useClusterDomainClaimColumns(
           );
         },
       },
-      ...(showClusterColumn
-        ? ([
-            {
-              id: 'cluster',
-              label: 'Cluster',
-              gridTemplate: 'auto',
-              getValue: item => item.cluster ?? '',
-            },
-          ] as ResourceTableColumn<KubeObject>[])
-        : []),
+      ...(showClusterColumn ? [clusterColumn] : []),
       {
         id: 'domainmapping',
         label: 'Domain Mapping',
         gridTemplate: 'auto',
         disableFiltering: true,
-        getValue: item => {
-          const cdc = item as ClusterDomainClaim;
+        getValue: cdc => {
           const cluster = cdc.cluster || clusters[0] || '';
           const expectedNamespace = cdc.spec?.namespace || '';
           if (!expectedNamespace || !domainMappings) return 'unknown';
@@ -93,8 +86,7 @@ export function useClusterDomainClaimColumns(
 
           return found ? 'present' : 'missing';
         },
-        render: item => {
-          const cdc = item as ClusterDomainClaim;
+        render: cdc => {
           const cluster = cdc.cluster || clusters[0] || '';
           const expectedNamespace = cdc.spec?.namespace || '';
 

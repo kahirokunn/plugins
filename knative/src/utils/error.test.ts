@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getErrorMessage, isNotFoundError } from './error';
+import { errorDetail, getErrorMessage, isNotFoundError, withDetail } from './error';
 
 describe('getErrorMessage', () => {
   it('returns the message from Error and API-like objects', () => {
@@ -33,5 +33,27 @@ describe('isNotFoundError', () => {
     expect(isNotFoundError({ status: 404 })).toBe(true);
     expect(isNotFoundError({ status: 403 })).toBe(false);
     expect(isNotFoundError(new Error('Network error'))).toBe(false);
+  });
+});
+
+describe('errorDetail', () => {
+  it('returns the trimmed message', () => {
+    expect(errorDetail(new Error('  boom  '))).toBe('boom');
+  });
+
+  it('returns undefined when there is no usable message', () => {
+    expect(errorDetail(undefined)).toBeUndefined();
+    expect(errorDetail({})).toBeUndefined();
+    expect(errorDetail(new Error('   '))).toBeUndefined();
+  });
+});
+
+describe('withDetail', () => {
+  it('appends the detail to the message', () => {
+    expect(withDetail('Restart failed', 'boom')).toBe('Restart failed: boom');
+  });
+
+  it('returns the message alone when there is no detail', () => {
+    expect(withDetail('Restart failed', undefined)).toBe('Restart failed');
   });
 });

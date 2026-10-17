@@ -16,6 +16,7 @@
 
 import { Link, type ResourceTableColumn } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import { Typography } from '@mui/material';
+import type { Condition } from '../../resources/knative/common';
 import { getSafeUrl } from '../../utils/url';
 import { ReadyStatusLabel } from './ReadyStatusLabel';
 
@@ -86,7 +87,7 @@ export function ExternalUrl({ url }: { url?: string }) {
 export function ReadyCell({
   condition,
 }: {
-  condition?: { status: 'True' | 'False' | 'Unknown'; reason?: string; message?: string };
+  condition?: Pick<Condition, 'status' | 'reason' | 'message'>;
 }) {
   return (
     <ReadyStatusLabel
@@ -98,11 +99,7 @@ export function ReadyCell({
 }
 
 type ReadinessItem = {
-  readyCondition?: {
-    status: 'True' | 'False' | 'Unknown';
-    reason?: string;
-    message?: string;
-  };
+  readyCondition?: Pick<Condition, 'status' | 'reason' | 'message'>;
 };
 
 export function getReadinessColumns<T extends ReadinessItem>(): ResourceTableColumn<T>[] {

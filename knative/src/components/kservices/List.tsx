@@ -33,10 +33,10 @@ import { useAuthorization } from '../../hooks/useAuthorization';
 import { useClusters } from '../../hooks/useClusters';
 import { useKnativeInstalled } from '../../hooks/useKnativeInstalled';
 import { KnativeDomainMapping, KService } from '../../resources/knative';
+import { findReadyCondition } from '../../resources/knative/resourceData';
 import { getSafeUrl } from '../../utils/url';
 import { NotInstalledBanner } from '../common/NotInstalledBanner';
-import { ReadyStatusLabel } from '../common/ReadyStatusLabel';
-import { ExternalUrl } from '../common/ResourceListCells';
+import { ExternalUrl, ReadyCell } from '../common/ResourceListCells';
 import { useCanRestartKService } from './detail/hooks/useCanRestartKService';
 import { useKServiceActions } from './detail/hooks/useKServiceActions';
 
@@ -97,26 +97,6 @@ function getRevisionShort(svc: KService, revisionName: string | undefined): stri
   }
 
   return revisionName;
-}
-
-function getReadyCondition(
-  svc: KService
-): { status: string; reason?: string; message?: string } | null {
-  const conditions = svc.status?.conditions;
-  if (!conditions) {
-    return null;
-  }
-
-  const readyCondition = conditions.find(c => c.type === 'Ready');
-  if (!readyCondition) {
-    return null;
-  }
-
-  return {
-    status: readyCondition.status || 'Unknown',
-    reason: readyCondition.reason,
-    message: readyCondition.message,
-  };
 }
 
 function getServiceUrls(svc: KService, domainByServiceKey: Record<string, string[]>): string[] {
@@ -437,36 +417,16 @@ function KServicesListContents({ clusters }: KServicesListContentsProps) {
           { label: 'False', value: 'False' },
           { label: 'Unknown', value: 'Unknown' },
         ],
-        getValue: svc => {
-          const readyCondition = getReadyCondition(svc);
-          return readyCondition?.status || 'Unknown';
-        },
-        render: svc => {
-          const readyCondition = getReadyCondition(svc);
-          let status: 'True' | 'False' | 'Unknown' = 'Unknown';
-          if (readyCondition?.status === 'True') status = 'True';
-          else if (readyCondition?.status === 'False') status = 'False';
-
-          return (
-            <ReadyStatusLabel
-              status={status}
-              reason={readyCondition?.reason}
-              message={readyCondition?.message}
-            />
-          );
-        },
+        getValue: svc => findReadyCondition(svc.status)?.status || 'Unknown',
+        render: svc => <ReadyCell condition={findReadyCondition(svc.status)} />,
       },
       {
         id: 'reason',
         label: 'Reason',
         gridTemplate: '2fr',
-        getValue: svc => {
-          const readyCondition = getReadyCondition(svc);
-          return readyCondition?.reason?.toLowerCase() || '';
-        },
+        getValue: svc => findReadyCondition(svc.status)?.reason?.toLowerCase() || '',
         render: svc => {
-          const readyCondition = getReadyCondition(svc);
-          const reason = readyCondition?.reason;
+          const reason = findReadyCondition(svc.status)?.reason;
 
           if (!reason) {
             return (

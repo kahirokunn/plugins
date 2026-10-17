@@ -20,32 +20,14 @@ import {
   ResourceListView,
   type ResourceTableColumn,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
-import type { KubeObject } from '@kinvolk/headlamp-plugin/lib/k8s/cluster';
 import { Chip, Typography } from '@mui/material';
 import React, { useMemo } from 'react';
 import { useClusters } from '../../hooks/useClusters';
 import { ClusterDomainClaim, KnativeDomainMapping } from '../../resources/knative';
 import { createClusterDomainClaim, getClusterDomainClaim } from '../../utils/domain';
 import { useNotify } from '../common/notifications/useNotify';
-import { ReadyStatusLabel } from '../common/ReadyStatusLabel';
-import { ExternalUrl } from '../common/ResourceListCells';
+import { ExternalUrl, ReadyCell } from '../common/ResourceListCells';
 import { DomainMappingRowAction } from './list/header/DomainMappingRowAction';
-
-function getReadyCondition(dm: KnativeDomainMapping): {
-  status: 'True' | 'False' | 'Unknown';
-  reason?: string;
-  message?: string;
-} {
-  const readyCondition = dm.status?.conditions?.find(c => c.type === 'Ready');
-  let status: 'True' | 'False' | 'Unknown' = 'Unknown';
-  if (readyCondition?.status === 'True') status = 'True';
-  else if (readyCondition?.status === 'False') status = 'False';
-  return {
-    status,
-    reason: readyCondition?.reason,
-    message: readyCondition?.message,
-  };
-}
 
 export function useDomainMappingColumns(
   clusters: string[],
@@ -54,9 +36,15 @@ export function useDomainMappingColumns(
   const showClusterColumn = clusters.length > 1;
 
   return useMemo<
-    (ResourceTableColumn<KubeObject> | 'namespace' | 'cluster' | 'age' | 'name')[]
+    (ResourceTableColumn<KnativeDomainMapping> | 'namespace' | 'cluster' | 'age' | 'name')[]
   >(() => {
-    const cols: (ResourceTableColumn<KubeObject> | 'namespace' | 'cluster' | 'age' | 'name')[] = [
+    const cols: (
+      | ResourceTableColumn<KnativeDomainMapping>
+      | 'namespace'
+      | 'cluster'
+      | 'age'
+      | 'name'
+    )[] = [
       'name',
       'namespace',
       ...(showClusterColumn ? (['cluster'] as const) : []),
@@ -65,20 +53,13 @@ export function useDomainMappingColumns(
         label: 'Ready',
         gridTemplate: 'auto',
         disableFiltering: true,
-        getValue: item => {
-          const dm = item as KnativeDomainMapping;
-          return getReadyCondition(dm).status === 'True' ? 1 : 0;
+        getValue: dm => {
+          return dm.readyCondition?.status === 'True' ? 1 : 0;
         },
-        render: item => {
-          const dm = item as KnativeDomainMapping;
-          const ready = getReadyCondition(dm);
-          return (
-            <ReadyStatusLabel status={ready.status} reason={ready.reason} message={ready.message} />
-          );
-        },
+        render: dm => <ReadyCell condition={dm.readyCondition} />,
         sort: (a, b) => {
-          const statusA = getReadyCondition(a as KnativeDomainMapping).status === 'True' ? 1 : 0;
-          const statusB = getReadyCondition(b as KnativeDomainMapping).status === 'True' ? 1 : 0;
+          const statusA = a.readyCondition?.status === 'True' ? 1 : 0;
+          const statusB = b.readyCondition?.status === 'True' ? 1 : 0;
           return statusA - statusB;
         },
       },
@@ -87,14 +68,12 @@ export function useDomainMappingColumns(
         label: 'Cluster Domain Claim',
         gridTemplate: 'auto',
         disableFiltering: true,
-        getValue: item => {
-          const dm = item as KnativeDomainMapping;
+        getValue: dm => {
           const cluster = dm.cluster || clusters[0] || '';
           const ns = dm.metadata.namespace || '';
           return getClusterDomainClaim(dm, clusterDomainClaims, cluster, ns).state;
         },
-        render: item => {
-          const dm = item as KnativeDomainMapping;
+        render: dm => {
           const cluster = dm.cluster || clusters[0] || '';
           const ns = dm.metadata.namespace || '';
           const { state, claim } = getClusterDomainClaim(dm, clusterDomainClaims, cluster, ns);
@@ -130,9 +109,8 @@ export function useDomainMappingColumns(
         id: 'url',
         label: 'URL',
         gridTemplate: 'auto',
-        getValue: item => (item as KnativeDomainMapping).readyUrl ?? '',
-        render: item => {
-          const dm = item as KnativeDomainMapping;
+        getValue: dm => dm.readyUrl ?? '',
+        render: dm => {
           return <ExternalUrl url={dm.readyUrl} />;
         },
       },
